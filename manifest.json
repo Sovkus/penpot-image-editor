@@ -1,10 +1,7 @@
 {
-  "name": "Image Color Editor",
-  "code": "plugin.js",
-  "entry": "index.html",
-  "icon": "icon.svg",
+  "name": "Image Editor",
   "version": "1.0.0",
-  "description": "Плагин для цветокоррекции изображений",
-  "permissions": ["content:read", "content:write", "theme:read"],
-  "author": "DeepSeek"
+  "description": "Edit image colors in Penpot",
+  "entry": "index.html",
+  "icon": "icon.svg"
 }
