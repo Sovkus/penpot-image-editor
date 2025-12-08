@@ -4,4 +4,6 @@
   "description": "Adjust exposure, contrast, saturation and more",
   "entry": "https://startling-kulfi-5e7a84.netlify.app/",
   "icon": "https://startling-kulfi-5e7a84.netlify.app/icon.svg"
+  "permissions": ["file:read", "file:write"],
 }
+
