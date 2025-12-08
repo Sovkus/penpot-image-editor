@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Color Editor</title>
+  <link rel="stylesheet" href="ui.css" />
+</head>
+<body>
+  <div class="shell">
+    <div class="preview" aria-label="Preview (208x208)">
+      <canvas id="previewCanvas" width="208" height="208"></canvas>
+    </div>
+
+    <div class="panel" aria-label="Controls">
+      <div class="panelTop">
+        <div class="title">Color adjustments</div>
+        <div class="sub">Плавный предпросмотр • применить к выделенному изображению</div>
+      </div>
+
+      <div class="sliderGrid">
+        <div class="control">
+          <label>Exposure</label>
+          <input id="exposure" type="range" min="-100" max="100" value="0" />
+        </div>
+        <div class="control">
+          <label>Contrast</label>
+          <input id="contrast" type="range" min="0" max="200" value="100" />
+        </div>
+        <div class="control">
+          <label>Saturation</label>
+          <input id="saturation" type="range" min="0" max="200" value="100" />
+        </div>
+        <div class="control">
+          <label>Temperature</label>
+          <input id="temperature" type="range" min="-100" max="100" value="0" />
+        </div>
+        <div class="control">
+          <label>Tint</label>
+          <input id="tint" type="range" min="-100" max="100" value="0" />
+        </div>
+        <div class="control">
+          <label>Highlights</label>
+          <input id="highlights" type="range" min="-100" max="100" value="0" />
+        </div>
+        <div class="control">
+          <label>Shadows</label>
+          <input id="shadows" type="range" min="-100" max="100" value="0" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="reset" class="btn ghost">Reset</button>
+        <button id="apply" class="btn primary">Apply to image</button>
+      </div>
+      <div id="status" class="status" role="status"></div>
+    </div>
+  </div>
+
+  <script src="ui.js"></script>
+</body>
+</html>
