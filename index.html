@@ -85,5 +85,34 @@
     
     <!-- Подключаем основной скрипт ВНЕШНИМ файлом -->
     <script src="plugin.js"></script>
+    <script>
+    // Инициализация базовых стилей
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Plugin HTML loaded");
+        
+        // Устанавливаем базовые CSS переменные
+        const root = document.documentElement;
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (isDark) {
+            root.style.setProperty('--background', '#1F1F1F');
+            root.style.setProperty('--text-primary', '#FFFFFF');
+            root.style.setProperty('--text-secondary', '#A0A0A0');
+        } else {
+            root.style.setProperty('--background', '#FFFFFF');
+            root.style.setProperty('--text-primary', '#000000');
+            root.style.setProperty('--text-secondary', '#666666');
+        }
+        
+        root.style.setProperty('--primary', '#2680EB');
+        root.style.setProperty('--danger', '#E5484D');
+        
+        // Устанавливаем фон контейнера предпросмотра
+        const previewContainer = document.getElementById('previewContainer');
+        if (previewContainer) {
+            previewContainer.style.backgroundColor = getComputedStyle(root).getPropertyValue('--background');
+        }
+    });
+</script>
 </body>
 </html>
