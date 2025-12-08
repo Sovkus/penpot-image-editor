@@ -1,9 +1,11 @@
 {
-  "name": "Image Color Editor",
-  "version": "1.0.2",
-  "description": "Плагин для цветокоррекции изображений",
-  "permissions": ["content:read", "content:write", "theme:read"],
-  "entry": "index.html",
+  "name": "Penpot Image Color Editor Flat",
+  "description": "Flat-structure image color editor plugin for Penpot",
+  "code": "plugin.js",
   "icon": "icon.svg",
-  "author": "Your Name"
+  "permissions": [
+    "content:read",
+    "content:write",
+    "allow:localstorage"
+  ]
 }
