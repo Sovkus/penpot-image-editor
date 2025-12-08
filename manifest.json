@@ -1,15 +1,11 @@
 {
-  "name": "Image Editor",
-  "version": "1.0.0",
-  "description": "Image color correction plugin",
-  "entry": "https://sovkus.github.io/penpot-image-editor/index.html",
-  "icon": "./icon.svg",
-  "author": "Your Name",
-  "license": "MIT",
-  "permissions": ["content:read", "content:write", "theme:read"],
-  "host": {
-    "app": "penpot",
-    "minVersion": "1.17.0"
-  }
+  "name": "Penpot Image Color Editor",
+  "description": "Adjust image color (Exposure, Contrast, Saturation, Temperature, Tint, Highlights, Shadows) with live preview and apply back to the selected Penpot image.",
+  "code": "plugin.js",
+  "icon": "icon.png",
+  "permissions": [
+    "content:read",
+    "content:write",
+    "allow:localstorage"
+  ]
 }
-
