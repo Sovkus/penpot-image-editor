@@ -1,7 +1,7 @@
 {
-  "name": "Color Editor v1.0.3",
+  "name": "Color Editor v1.0.4",
   "description": "Adjust image color (Exposure, Contrast, Saturation, Temperature, Tint, Highlights, Shadows) Canvas, more",
-  "code": "plugin.js",
+  "code": "https://banners.smart-demo.ru/rzhukov/01/plugin.js",
   "icon": "https://sovkus.github.io/penpot-image-editor/icon.png",
   "permissions": [
     "content:read",
