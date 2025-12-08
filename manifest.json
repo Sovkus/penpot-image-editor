@@ -1,6 +1,6 @@
 {
   "name": "Color Editor v1.0.1",
-  "description": "Adjust image color (Exposure, Contrast, Saturation, Temperature, Tint, Highlights, Shadows) with live preview and apply back to the selected Penpot image.",
+  "description": "Adjust image color (Exposure, Contrast, Saturation, Temperature, Tint, Highlights, Shadows)",
   "code": "./plugin.js",
   "icon": "./icon.png",
   "permissions": [
