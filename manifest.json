@@ -1,12 +1,13 @@
 {
-  "name": "Image Color Editor",
-  "code": "https://sovkus.github.io/penpot-image-editor/plugin.js",
-  "entry": "https://sovkus.github.io/penpot-image-editor/index.html",
-  "icon": "icon.svg",
+  "name": "Image Editor",
   "version": "1.0.0",
-  "description": "Плагин для цветокоррекции изображений",
-  "permissions": ["content:read", "content:write", "theme:read"],
+  "description": "Image color correction plugin",
+  "entry": "./index.html",
+  "icon": "./icon.svg",
   "author": "DeepSeek"
-
+  "permissions": [
+    "content:read",
+    "content:write",
+    "theme:read"
+  ]
 }
-
