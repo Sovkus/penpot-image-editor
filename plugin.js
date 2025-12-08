@@ -1,5 +1,5 @@
-// Penpot плагины используют специальный API, а не стандартные window/document
-// Этот код должен выполняться в глобальной области видимости плагина
+// Image Editor Plugin for Penpot
+console.log("Image Editor Plugin loading...");
 
 // Основные переменные
 let selectedImage = null;
@@ -13,72 +13,74 @@ let currentFilters = {
     shadows: 0
 };
 
-// Инициализация плагина при загрузке
-console.log("Image Editor Plugin loading...");
+// Получаем элементы DOM
+const previewImage = document.getElementById('previewImage');
+const noImageMessage = document.getElementById('noImage');
+const previewContainer = document.getElementById('previewContainer');
+const applyBtn = document.getElementById('applyBtn');
+const resetBtn = document.getElementById('resetBtn');
+const errorMessage = document.getElementById('errorMessage');
 
-// Penpot предоставляет специальный API для работы с DOM
-// Ждем, когда Penpot загрузит интерфейс плагина
+// Инициализация ползунков
+const sliders = {
+    exposure: document.getElementById('exposure'),
+    contrast: document.getElementById('contrast'),
+    saturation: document.getElementById('saturation'),
+    temperature: document.getElementById('temperature'),
+    tint: document.getElementById('tint'),
+    highlights: document.getElementById('highlights'),
+    shadows: document.getElementById('shadows')
+};
+
+const valueDisplays = {
+    exposure: document.getElementById('exposureValue'),
+    contrast: document.getElementById('contrastValue'),
+    saturation: document.getElementById('saturationValue'),
+    temperature: document.getElementById('temperatureValue'),
+    tint: document.getElementById('tintValue'),
+    highlights: document.getElementById('highlightsValue'),
+    shadows: document.getElementById('shadowsValue')
+};
+
+// Функция инициализации плагина
 function initializePlugin() {
-    console.log("Initializing plugin...");
+    console.log("Initializing plugin controls...");
     
     try {
-        // Получаем элементы после того как Penpot создаст DOM
-        const previewImage = document.getElementById('previewImage');
-        const noImageMessage = document.getElementById('noImage');
-        const applyBtn = document.getElementById('applyBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        
-        console.log("DOM elements found:", {
-            previewImage: !!previewImage,
-            noImageMessage: !!noImageMessage,
-            applyBtn: !!applyBtn,
-            resetBtn: !!resetBtn
-        });
-        
-        // Инициализируем ползунки
-        const sliderIds = ['exposure', 'contrast', 'saturation', 'temperature', 'tint', 'highlights', 'shadows'];
-        
-        sliderIds.forEach(sliderId => {
-            const slider = document.getElementById(sliderId);
-            const valueDisplay = document.getElementById(sliderId + 'Value');
+        // Настройка обработчиков для ползунков
+        Object.keys(sliders).forEach(key => {
+            const slider = sliders[key];
+            const valueDisplay = valueDisplays[key];
             
             if (slider && valueDisplay) {
-                slider.addEventListener('input', function(e) {
+                slider.addEventListener('input', (e) => {
                     const value = parseInt(e.target.value);
-                    currentFilters[sliderId] = value;
+                    currentFilters[key] = value;
                     valueDisplay.textContent = value;
                     updateImagePreview();
                 });
             }
         });
         
-        // Настройка кнопок
+        // Кнопка сброса
         if (resetBtn) {
-            resetBtn.addEventListener('click', function() {
-                resetAllFilters();
-            });
+            resetBtn.addEventListener('click', resetAllFilters);
         }
         
+        // Кнопка применения
         if (applyBtn) {
-            applyBtn.addEventListener('click', function() {
-                applyFiltersToImage();
-            });
+            applyBtn.addEventListener('click', applyFiltersToImage);
         }
         
-        // Запрашиваем тему и выделение у Penpot
-        penpot.sendMessage({ type: 'get-theme' });
-        penpot.sendMessage({ type: 'get-selection' });
-        
-        console.log("Plugin initialized successfully");
+        console.log("Plugin controls initialized");
         
     } catch (error) {
-        console.error("Error initializing plugin:", error);
+        console.error("Error initializing controls:", error);
     }
 }
 
 // Функция обновления предпросмотра
 function updateImagePreview() {
-    const previewImage = document.getElementById('previewImage');
     if (!previewImage || !previewImage.src) return;
     
     const filterString = generateFilterString();
@@ -118,8 +120,8 @@ function resetAllFilters() {
     Object.keys(currentFilters).forEach(key => {
         currentFilters[key] = 0;
         
-        const slider = document.getElementById(key);
-        const valueDisplay = document.getElementById(key + 'Value');
+        const slider = sliders[key];
+        const valueDisplay = valueDisplays[key];
         
         if (slider) slider.value = 0;
         if (valueDisplay) valueDisplay.textContent = '0';
@@ -137,7 +139,6 @@ function applyFiltersToImage() {
     
     showMessage('Применение фильтров...', 'info');
     
-    const previewImage = document.getElementById('previewImage');
     if (!previewImage || !previewImage.src) {
         showMessage('Нет изображения для обработки', 'error');
         return;
@@ -161,17 +162,24 @@ function applyFiltersToImage() {
         // Конвертируем в Data URL
         const processedDataUrl = canvas.toDataURL('image/png');
         
-        // Отправляем в Penpot
-        penpot.sendMessage({
-            type: 'update-image',
+        // Отправляем в Penpot через postMessage
+        window.parent.postMessage({
+            type: 'plugin-message',
+            pluginId: 'image-editor',
+            action: 'update-image',
             data: {
                 id: selectedImage.id,
                 imageUrl: processedDataUrl,
                 filters: { ...currentFilters }
             }
-        });
+        }, '*');
         
         showMessage('Фильтры применены!', 'success');
+        
+        // Скрываем сообщение через 2 секунды
+        setTimeout(() => {
+            if (errorMessage) errorMessage.style.display = 'none';
+        }, 2000);
     };
     
     img.onerror = function() {
@@ -183,46 +191,21 @@ function applyFiltersToImage() {
 
 // Показать сообщение
 function showMessage(message, type = 'info') {
-    const messageEl = document.getElementById('errorMessage');
-    if (messageEl) {
-        messageEl.textContent = message;
-        messageEl.style.display = 'block';
-        
-        // Убираем сообщение через 3 секунды
-        setTimeout(() => {
-            messageEl.style.display = 'none';
-        }, 3000);
-    }
-    
     console.log(`${type.toUpperCase()}: ${message}`);
-}
-
-// Обработчик сообщений от Penpot
-if (typeof penpot !== 'undefined') {
-    penpot.onMessage(function(data) {
-        console.log("Message from Penpot:", data);
+    
+    if (errorMessage) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
         
-        switch(data.type) {
-            case 'theme':
-                applyTheme(data.data);
-                break;
-                
-            case 'selection':
-                handleSelection(data.data);
-                break;
-                
-            case 'image-data':
-                handleImageData(data.data);
-                break;
+        // Устанавливаем цвет в зависимости от типа
+        if (type === 'error') {
+            errorMessage.style.color = 'var(--danger)';
+        } else if (type === 'success') {
+            errorMessage.style.color = 'green';
+        } else {
+            errorMessage.style.color = 'var(--text-secondary)';
         }
-    });
-} else {
-    // Fallback для отладки
-    console.warn("Penpot API not found, using fallback");
-    window.addEventListener('message', function(event) {
-        if (event.source !== window.parent) return;
-        console.log("Fallback message:", event.data);
-    });
+    }
 }
 
 // Применение темы
@@ -256,7 +239,6 @@ function applyTheme(theme) {
         root.style.setProperty(`--${key}`, value);
     });
     
-    const previewContainer = document.getElementById('previewContainer');
     if (previewContainer) {
         previewContainer.style.backgroundColor = colors.background;
     }
@@ -265,10 +247,6 @@ function applyTheme(theme) {
 // Обработка выделения
 function handleSelection(selection) {
     console.log("Selection received:", selection);
-    
-    const noImageMessage = document.getElementById('noImage');
-    const previewImage = document.getElementById('previewImage');
-    const applyBtn = document.getElementById('applyBtn');
     
     if (!selection || selection.length !== 1) {
         if (noImageMessage) noImageMessage.style.display = 'block';
@@ -288,10 +266,13 @@ function handleSelection(selection) {
         if (applyBtn) applyBtn.disabled = false;
         
         // Запрашиваем данные изображения
-        penpot.sendMessage({
-            type: 'get-image-data',
+        window.parent.postMessage({
+            type: 'plugin-message',
+            pluginId: 'image-editor',
+            action: 'get-image-data',
             data: { id: selected.id }
-        });
+        }, '*');
+        
     } else {
         if (noImageMessage) noImageMessage.style.display = 'block';
         if (previewImage) previewImage.style.display = 'none';
@@ -304,7 +285,6 @@ function handleSelection(selection) {
 function handleImageData(data) {
     console.log("Image data received:", data);
     
-    const previewImage = document.getElementById('previewImage');
     if (!previewImage || !data || !data.url) return;
     
     const img = new Image();
@@ -322,6 +302,80 @@ function handleImageData(data) {
     img.src = data.url;
 }
 
-// Запускаем инициализацию с небольшой задержкой
-// чтобы Penpot успел создать DOM
-setTimeout(initializePlugin, 100);
+// Обработчик сообщений от Penpot
+window.addEventListener('message', function(event) {
+    // Проверяем, что сообщение от родительского окна (Penpot)
+    if (event.source !== window.parent) return;
+    
+    const message = event.data;
+    console.log("Message from Penpot:", message);
+    
+    // Обрабатываем только сообщения для нашего плагина
+    if (message.pluginId !== 'image-editor' && !message.type?.includes('image-editor')) {
+        return;
+    }
+    
+    switch(message.type || message.action) {
+        case 'theme':
+        case 'set-theme':
+            applyTheme(message.data || message.theme);
+            break;
+            
+        case 'selection':
+        case 'set-selection':
+            handleSelection(message.data || message.selection);
+            break;
+            
+        case 'image-data':
+        case 'set-image-data':
+            handleImageData(message.data || message.imageData);
+            break;
+            
+        case 'ready':
+            console.log("Penpot ready, initializing plugin...");
+            initializePlugin();
+            
+            // Запрашиваем текущую тему и выделение
+            window.parent.postMessage({
+                type: 'plugin-message',
+                pluginId: 'image-editor',
+                action: 'get-theme'
+            }, '*');
+            
+            window.parent.postMessage({
+                type: 'plugin-message',
+                pluginId: 'image-editor',
+                action: 'get-selection'
+            }, '*');
+            break;
+    }
+});
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, waiting for Penpot...");
+    
+    // Сообщаем Penpot, что плагин готов
+    window.parent.postMessage({
+        type: 'plugin-message',
+        pluginId: 'image-editor',
+        action: 'ready'
+    }, '*');
+    
+    // Также инициализируем элементы на всякий случай
+    setTimeout(initializePlugin, 100);
+});
+
+// Если DOM уже загружен
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    console.log("DOM already loaded");
+    window.parent.postMessage({
+        type: 'plugin-message',
+        pluginId: 'image-editor',
+        action: 'ready'
+    }, '*');
+    
+    setTimeout(initializePlugin, 100);
+}
+
+console.log("Plugin script loaded successfully");
