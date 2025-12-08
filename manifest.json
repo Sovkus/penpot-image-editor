@@ -2,7 +2,7 @@
   "name": "Image Editor",
   "version": "1.0.0",
   "description": "Image color correction plugin",
-  "entry": "./index.html",
+  "entry": "https://sovkus.github.io/penpot-image-editor/index.html",
   "icon": "./icon.svg",
   "author": "Your Name",
   "license": "MIT",
@@ -12,3 +12,4 @@
     "minVersion": "1.17.0"
   }
 }
+
