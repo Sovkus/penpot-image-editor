@@ -1,0 +1,10 @@
+{
+  "name": "Image Color Editor",
+  "code": "https://banners.smart-demo.ru/rzhukov/01/tst/plugin.js",
+  "entry": "https://banners.smart-demo.ru/rzhukov/01/tst/index.html",
+  "icon": "https://banners.smart-demo.ru/rzhukov/01/tst/icon.svg",
+  "version": "1.0.0",
+  "description": "Плагин для цветокоррекции изображений",
+  "permissions": ["content:read", "content:write", "theme:read"],
+  "author": "DeepSeek"
+}
