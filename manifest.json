@@ -2,8 +2,8 @@
   "name": "Image Editor",
   "version": "1.0.0",
   "description": "Image color correction plugin",
-  "entry": "./index.html",
-  "icon": "./icon.svg",
+  "entry": "https://sovkus.github.io/penpot-image-editor/index.html",
+  "icon": "https://sovkus.github.io/penpot-image-editor/icon.svg",
   "author": "Your Name",
   "permissions": [
     "content:read",
@@ -11,3 +11,4 @@
     "theme:read"
   ]
 }
+
