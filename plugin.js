@@ -1,3 +1,5 @@
+console.log("plugin.js loaded", typeof penpot);
+
 penpot.plugin.init(async function() {
   const ui = await penpot.ui.open("Image Editor", "https://sovkus.github.io/penpot-image-editor/index.html");
 
