@@ -2,6 +2,7 @@
   "name": "Image Editor",
   "version": "1.0.0",
   "description": "Edit image colors in Penpot",
-  "entry": "index.html",
-  "icon": "icon.svg"
+  "entry": "./index.html",
+  "icon": "./icon.svg"
 }
+
