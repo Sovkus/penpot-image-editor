@@ -1,0 +1,10 @@
+{
+  "name": "Image Color Editor",
+  "code": "plugin.js",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "version": "1.0.0",
+  "description": "Плагин для цветокоррекции изображений",
+  "permissions": ["content:read", "content:write", "theme:read"],
+  "author": "DeepSeek"
+}
