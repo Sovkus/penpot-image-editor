@@ -1,9 +1,10 @@
 {
   "name": "Penpot Image Color Editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Adjust Exposure, Contrast, Saturation, Temperature, Tint, Highlights, Shadows for images inside Penpot",
   "code": "https://sovkus.github.io/penpot-image-editor/plugin.js",
-  "icon": "https://sovkus.github.io/penpot-image-editor/icon.png",
+  "icon": "https://sovkus.github.io/penpot-image-editor/icon.svg",
   "permissions": ["content:read", "content:write", "theme:read"],
   "ui": "https://sovkus.github.io/penpot-image-editor/index.html"
 }
+
