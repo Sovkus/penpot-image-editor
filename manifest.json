@@ -1,8 +1,8 @@
 {
   "name": "Image Editor",
   "version": "1.0.0",
-  "description": "Edit image colors",
-  "entry": "index.html",
-  "icon": "icon.svg",
+  "description": "Edit image colors in Penpot",
+  "entry": "https://startling-kulfi-5e7a84.netlify.app/index.html",
+  "icon": "https://startling-kulfi-5e7a84.netlify.app/icon.svg",
   "permissions": []
 }
