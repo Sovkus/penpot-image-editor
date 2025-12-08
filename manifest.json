@@ -1,11 +1,9 @@
 {
-  "name": "Penpot Image Color Editor Flat",
-  "description": "Flat-structure image color editor plugin for Penpot",
-  "code": "plugin.js",
-  "icon": "icon.svg",
-  "permissions": [
-    "content:read",
-    "content:write",
-    "allow:localstorage"
-  ]
+  "name": "Penpot Image Color Editor",
+  "version": "1.0.0",
+  "description": "Adjust Exposure, Contrast, Saturation, Temperature, Tint, Highlights, Shadows for images inside Penpot",
+  "code": "https://sovkus.github.io/penpot-image-editor/plugin.js",
+  "icon": "https://sovkus.github.io/penpot-image-editor/icon.png",
+  "permissions": ["content:read", "content:write", "theme:read"],
+  "ui": "https://sovkus.github.io/penpot-image-editor/index.html"
 }
