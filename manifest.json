@@ -2,10 +2,11 @@
   "name": "Image Color Editor",
   "code": "https://sovkus.github.io/penpot-image-editor/plugin.js",
   "entry": "https://sovkus.github.io/penpot-image-editor/index.html",
-  "icon": "https://sovkus.github.io/penpot-image-editor/icon.svg",
+  "icon": "icon.svg",
   "version": "1.0.0",
   "description": "Плагин для цветокоррекции изображений",
   "permissions": ["content:read", "content:write", "theme:read"],
   "author": "DeepSeek"
 
 }
+
