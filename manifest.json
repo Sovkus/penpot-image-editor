@@ -2,10 +2,11 @@
   "name": "Image Editor",
   "version": "1.0.1",
   "description": "Adjust exposure, contrast, saturation and more",
-  "entry": "index.html",
+  "entry": "https://startling-kulfi-5e7a84.netlify.app/index.html",
   "icon": "icon.svg",
   "permissions": ["file:read", "file:write"]
 }
+
 
 
 
