@@ -1,17 +1,48 @@
 body {
-  font-family: sans-serif;
   display: flex;
   gap: 20px;
-  padding: 20px;
+  font-family: sans-serif;
+  padding: 16px;
+  background: #f4f4f7;
 }
 
-#preview {
-  border: 1px solid #ccc;
-  background: #eee;
+.preview-block {
+  width: 208px;
+  height: 208px;
+  background: #eaeaea;
+  border-radius: 8px;
+  padding: 8px;
 }
 
-#controls {
+.controls {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+label {
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #4b4bff;
+  color: white;
+  font-size: 14px;
+}
+
+button#reset {
+  background: #bbb;
+  color: #000;
 }
