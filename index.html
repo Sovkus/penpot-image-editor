@@ -162,6 +162,79 @@
             font-style: italic;
         }
     </style>
+    <script>
+// penpot-api.js - API для взаимодействия с Penpot
+class PenpotAPI {
+    constructor() {
+        this.pluginId = null;
+        this.callbacks = new Map();
+        this.messageId = 0;
+        
+        window.addEventListener('message', this.handleMessage.bind(this));
+        this.initialize();
+    }
+
+    initialize() {
+        // Отправляем сообщение о готовности
+        this.sendMessage({
+            type: 'penpot-plugin-ready',
+            version: '1.0.0'
+        });
+    }
+
+    handleMessage(event) {
+        const data = event.data;
+        
+        if (data.type === 'penpot-plugin-init') {
+            this.pluginId = data.pluginId;
+            console.log('Penpot plugin initialized with ID:', this.pluginId);
+        }
+        
+        // Обработка ответов на запросы
+        if (data.messageId && this.callbacks.has(data.messageId)) {
+            const callback = this.callbacks.get(data.messageId);
+            callback(data);
+            this.callbacks.delete(data.messageId);
+        }
+    }
+
+    sendMessage(message) {
+        if (window.parent) {
+            const messageId = ++this.messageId;
+            const messageWithId = {
+                ...message,
+                messageId: messageId,
+                pluginId: this.pluginId
+            };
+            
+            return new Promise((resolve) => {
+                this.callbacks.set(messageId, resolve);
+                window.parent.postMessage(messageWithId, '*');
+            });
+        }
+    }
+
+    async getSelection() {
+        return this.sendMessage({
+            type: 'get-selection'
+        });
+    }
+
+    async getImageData(objectId) {
+        return this.sendMessage({
+            type: 'get-image-data',
+            id: objectId
+        });
+    }
+
+    async applyFilters(settings) {
+        return this.sendMessage({
+            type: 'apply-filters',
+            settings: settings
+        });
+    }
+}
+    </script>
 </head>
 <body>
     <div class="container">
