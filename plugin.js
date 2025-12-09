@@ -4,7 +4,7 @@ penpot.plugin.init(async (plugin) => {
   // Открываем UI
   const ui = await penpot.ui.open(
     "Image Editor",
-    "https://sovkus.github.io/penpot-image-editor/index.html"
+    "./penpot-image-editor/index.html"
   );
 
   const originals = new Map();
