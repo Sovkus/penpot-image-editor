@@ -1,40 +1,47 @@
-// plugin.js
-console.log('⚡ IMAGE EDITOR: Immediate test');
+// plugin.js - отладочный плагин
+console.log('🔍 DEBUG PLUGIN: Investigating Penpot plugin system');
 
-// Попробуем сразу выполнить код, который должен создавать интерфейс
-(function() {
-    console.log('⚡ IIFE executing...');
-    
-    // Попробуем получить доступ к Penpot API
-    if (typeof window !== 'undefined' && window.parent) {
-        console.log('⚡ Window parent exists');
-        
-        // Отправим сообщение о готовности
-        window.parent.postMessage({
-            type: 'penpot-plugin-ready',
-            name: 'image-editor'
-        }, '*');
-    }
-    
-    // Создадим глобальный объект разными способами
-    var myPlugin = {
-        create: function() {
-            console.log('⚡ CREATE CALLED!');
-            return {
-                html: '<div>TEST</div>',
-                css: '',
-                onMount: function() { console.log('⚡ MOUNTED'); },
-                onMessage: function() {}
-            };
-        }
+// Давайте посмотрим, что доступно в контексте выполнения
+console.log('🔍 Available globals:');
+console.log('🔍 typeof module:', typeof module);
+console.log('🔍 typeof exports:', typeof exports);
+console.log('🔍 typeof require:', typeof require);
+console.log('🔍 typeof window:', typeof window);
+console.log('🔍 typeof document:', typeof document);
+console.log('🔍 typeof this:', typeof this);
+console.log('🔍 this keys:', Object.keys(this || {}));
+
+// Пробуем перехватить, что Penpot ищет
+var originalEval = eval;
+try {
+    eval = function(code) {
+        console.log('🔍 eval called with:', code.substring(0, 100));
+        return originalEval(code);
     };
-    
-    // Пробуем все возможные способы
-    try { exports = myPlugin; } catch(e) {}
-    try { module.exports = myPlugin; } catch(e) {}
-    try { this.exports = myPlugin; } catch(e) {}
-    try { if (typeof window !== 'undefined') window.Plugin = myPlugin; } catch(e) {}
-    try { Plugin = myPlugin; } catch(e) {}
-    
-    console.log('⚡ All exports attempted');
-})();
+} catch(e) {}
+
+// Создаем объект-ловушку
+var trap = {};
+Object.defineProperty(this, 'Plugin', {
+    set: function(value) {
+        console.log('🔍 Penpot is setting Plugin to:', value);
+        trap = value;
+    },
+    get: function() {
+        console.log('🔍 Penpot is getting Plugin');
+        return {
+            create: function() {
+                console.log('🔍 Penpot called Plugin.create()!');
+                return {
+                    html: '<div>TRAP SUCCESS</div>',
+                    css: '',
+                    onMount: function() { console.log('🔍 onMount in trap'); },
+                    onMessage: function() {}
+                };
+            }
+        };
+    },
+    configurable: true
+});
+
+console.log('🔍 DEBUG PLUGIN: Trap set up');
