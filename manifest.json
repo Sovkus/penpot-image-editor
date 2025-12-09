@@ -5,6 +5,7 @@
   "icon": "penpot-image-editor/icon.svg",
   "permissions": ["content:read", "content:write", "theme:read"],
   "entry": "penpot-image-editor/index.html",
+  "code": "penpot-image-editor/plugin.js",
   "type": "ui",
   "size": {
     "width": 420,
