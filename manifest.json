@@ -1,13 +1,12 @@
 {
   "name": "DS Image Editor",
-  "version": "v1.0.1",
+  "version": "v1.0.10",
   "description": "Image editing plugin with exposure, contrast, saturation and other adjustments",
   "icon": "penpot-image-editor/icon.svg",
-  "permissions": ["content:styles", "file:current"],
   "entry": "penpot-image-editor/index.html",
-  "type": "ui",
-  "size": {
-    "width": 400,
-    "height": 500
-  }
+    "permissions": [
+    "content:read",
+    "content:write",
+    "allow:localstorage"
+  ]
 }
