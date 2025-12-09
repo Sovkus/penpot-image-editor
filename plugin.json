@@ -4,7 +4,7 @@
   "description": "Image editing plugin with exposure, contrast, saturation and other adjustments",
   "icon": "icon.svg",
   "permissions": ["content:styles", "file:current"],
-  "entry": "index.html",
+  "entry": "plugin.html",
   "type": "ui",
   "size": {
     "width": 420,
