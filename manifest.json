@@ -3,7 +3,7 @@
   "version": "v1.0.11",
   "description": "Image editing plugin with exposure, contrast, saturation and other adjustments",
   "icon": "penpot-image-editor/icon.svg",
-  "permissions": ["content:styles", "file:current"],
+  "permissions": ["content:read", "content:write", "theme:read"],
   "entry": "penpot-image-editor/index.html",
   "type": "ui",
   "size": {
