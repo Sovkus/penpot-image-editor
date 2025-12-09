@@ -1,52 +1,70 @@
-// plugin.js
-console.log('!!! PENPOT PLUGIN LOADED !!!');
+// plugin.js - минимальный рабочий плагин по документации Penpot
+console.log('🔧 PENPOT PLUGIN: Loading...');
 
-// ВАЖНО: Penpot может искать плагин по имени "Plugin" или "PenpotPlugin"
-// Пробуем оба варианта
+// Согласно документации Penpot, плагин должен быть доступен как глобальный объект
+// с методом create()
 
-// Вариант A
-var Plugin = {
+// Определяем плагин
+PenpotPlugin = {
     create: function() {
-        console.log('!!! Plugin.create() CALLED !!!');
+        console.log('🔧 PENPOT PLUGIN: create() method called!');
+        
+        // Возвращаем объект с интерфейсом плагина
         return {
-            html: '<div style="padding: 20px;"><h3>Image Editor</h3><p>Plugin is working!</p></div>',
-            css: '',
+            // HTML содержимое
+            html: `
+                <div style="padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+                    <h3 style="color: var(--penpot-text-primary); margin-bottom: 10px;">🎨 Image Editor</h3>
+                    <p style="color: var(--penpot-text-secondary);">Plugin is successfully loaded!</p>
+                    <p style="color: var(--penpot-text-secondary); font-size: 12px; margin-top: 20px;">
+                        Select an image in Penpot to start editing.
+                    </p>
+                </div>
+            `,
+            
+            // CSS стили
+            css: `
+                div {
+                    background: var(--penpot-background-secondary);
+                    border-radius: 8px;
+                    height: 100%;
+                }
+            `,
+            
+            // Вызывается когда плагин монтируется в DOM
             onMount: function(root) {
-                console.log('!!! Plugin mounted !!!', root);
+                console.log('🔧 PENPOT PLUGIN: onMount() called!');
+                console.log('Root element:', root);
+                
+                // Можно добавить интерактивности
+                setTimeout(function() {
+                    var p = document.createElement('p');
+                    p.textContent = '✅ Plugin mounted at: ' + new Date().toLocaleTimeString();
+                    p.style.color = 'var(--penpot-text-secondary)';
+                    p.style.fontSize = '11px';
+                    p.style.marginTop = '10px';
+                    root.querySelector('div').appendChild(p);
+                }, 1000);
             },
+            
+            // Вызывается при получении сообщений от Penpot
             onMessage: function(data) {
-                console.log('!!! Message received !!!', data);
+                console.log('🔧 PENPOT PLUGIN: Received message:', data);
             }
         };
     }
 };
 
-// Вариант B
-var PenpotPlugin = Plugin; // Тот же объект
+console.log('🔧 PENPOT PLUGIN: Plugin object created:', PenpotPlugin);
+console.log('🔧 PENPOT PLUGIN: Has create method?', typeof PenpotPlugin.create === 'function');
 
-console.log('Plugin object:', Plugin);
-console.log('PenpotPlugin object:', PenpotPlugin);
-
-// Попробуем сделать доступным разными способами
+// Для отладки - сразу вызываем create
 try {
-    // Способ 1: Присвоить глобальной переменной
-    this.Plugin = Plugin;
-    console.log('Assigned to this.Plugin');
+    console.log('🔧 PENPOT PLUGIN: Testing create()...');
+    var testResult = PenpotPlugin.create();
+    console.log('🔧 PENPOT PLUGIN: create() returned:', testResult);
 } catch(e) {
-    console.log('Cannot assign to this:', e);
+    console.error('🔧 PENPOT PLUGIN: Error calling create():', e);
 }
 
-try {
-    // Способ 2: Через window если доступен
-    if (typeof window !== 'undefined') {
-        window.Plugin = Plugin;
-        window.PenpotPlugin = PenpotPlugin;
-        console.log('Assigned to window.Plugin and window.PenpotPlugin');
-    }
-} catch(e) {
-    console.log('Window not available:', e);
-}
-
-// Для отладки
-console.log('typeof Plugin:', typeof Plugin);
-console.log('typeof Plugin.create:', typeof Plugin.create);
+console.log('🔧 PENPOT PLUGIN: Script execution complete');
