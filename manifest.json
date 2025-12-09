@@ -1,10 +1,11 @@
 {
   "name": "Penpot Image Color Editor",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Image editing plugin for Penpot — exposure, contrast, saturation, color adjustments.",
   "permissions": ["content:read", "content:write", "theme:read"],
-  "icon": "./penpot-image-editor/icon.png",
-  "code": "./penpot-image-editor/plugin.js",
-  "ui": "./penpot-image-editor/index.html"
+  "icon": "/penpot-image-editor/icon.png",
+  "code": "/penpot-image-editor/plugin.js",
+  "ui": "/penpot-image-editor/index.html"
 }
+
 
