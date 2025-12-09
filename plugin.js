@@ -1,10 +1,12 @@
 class ImageEditorPlugin {
     constructor() {
+        this.penpot = new PenpotAPI();
         this.currentImage = null;
         this.originalImageData = null;
         this.canvas = document.getElementById('preview-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.previewPlaceholder = document.getElementById('preview-placeholder');
+        this.selectedObject = null;
         
         this.settings = {
             exposure: 0,
@@ -17,7 +19,7 @@ class ImageEditorPlugin {
         };
 
         this.initializeEventListeners();
-        this.setupPenpotCommunication();
+        this.setupSelectionPolling();
     }
 
     initializeEventListeners() {
@@ -41,53 +43,72 @@ class ImageEditorPlugin {
         document.getElementById('apply-btn').addEventListener('click', () => this.applyToImage());
     }
 
-    setupPenpotCommunication() {
-        // Listen for messages from Penpot
-        window.addEventListener('message', async (event) => {
-            const data = event.data;
-            
-            if (data.type === 'selection-change') {
-                await this.handleSelectionChange(data.selection);
+    async setupSelectionPolling() {
+        // Периодически проверяем выделение
+        setInterval(async () => {
+            try {
+                const response = await this.penpot.getSelection();
+                await this.handleSelectionUpdate(response);
+            } catch (error) {
+                console.log('Selection check:', error);
             }
-        });
+        }, 1000);
 
-        // Request initial selection
-        this.sendMessage({ type: 'request-selection' });
-    }
-
-    sendMessage(message) {
-        if (window.parent) {
-            window.parent.postMessage(message, '*');
+        // Первоначальная проверка
+        try {
+            const response = await this.penpot.getSelection();
+            await this.handleSelectionUpdate(response);
+        } catch (error) {
+            console.log('Initial selection:', error);
         }
     }
 
-    async handleSelectionChange(selection) {
-        if (!selection || selection.length === 0) {
-            this.clearPreview();
+    async handleSelectionUpdate(response) {
+        if (!response || !response.selection || response.selection.length === 0) {
+            if (this.selectedObject) {
+                this.clearPreview();
+                this.selectedObject = null;
+            }
             return;
         }
 
-        // Get the first selected object
-        const selectedObject = selection[0];
+        // Получаем первый выделенный объект
+        const selection = response.selection[0];
         
-        // Check if it's an image
-        if (selectedObject.type === 'image' && selectedObject.metadata) {
-            await this.loadImage(selectedObject);
-        } else {
-            this.clearPreview();
+        // Если это изображение и оно изменилось
+        if (selection.type === 'image' && 
+            (!this.selectedObject || this.selectedObject.id !== selection.id)) {
+            
+            this.selectedObject = selection;
+            await this.loadImage(selection);
         }
     }
 
     async loadImage(object) {
         try {
-            // Request image data from Penpot
-            this.sendMessage({
-                type: 'request-image',
-                id: object.id
-            });
+            this.showMessage('Loading image...');
+            
+            // Получаем данные изображения
+            const response = await this.penpot.getImageData(object.id);
+            
+            if (response && response.imageData) {
+                await this.setImageFromData(response.imageData);
+                this.showMessage('');
+            } else {
+                this.showMessage('Failed to load image');
+                this.clearPreview();
+            }
         } catch (error) {
             console.error('Error loading image:', error);
+            this.showMessage('Error loading image');
             this.clearPreview();
+        }
+    }
+
+    showMessage(message) {
+        const infoText = document.querySelector('.info-text');
+        if (infoText) {
+            infoText.textContent = message;
         }
     }
 
@@ -133,6 +154,7 @@ class ImageEditorPlugin {
         this.originalImageData = null;
         this.canvas.style.display = 'none';
         this.previewPlaceholder.style.display = 'flex';
+        this.showMessage('Select an image in Penpot to edit');
     }
 
     applyFilters() {
@@ -162,9 +184,9 @@ class ImageEditorPlugin {
         const factor = 1 + (this.settings.exposure / 100);
         
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = this.clamp(data[i] * factor);     // R
-            data[i + 1] = this.clamp(data[i + 1] * factor); // G
-            data[i + 2] = this.clamp(data[i + 2] * factor); // B
+            data[i] = this.clamp(data[i] * factor);
+            data[i + 1] = this.clamp(data[i + 1] * factor);
+            data[i + 2] = this.clamp(data[i + 2] * factor);
         }
     }
 
@@ -174,9 +196,9 @@ class ImageEditorPlugin {
         const factor = (259 * (this.settings.contrast + 255)) / (255 * (259 - this.settings.contrast));
         
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = this.clamp(factor * (data[i] - 128) + 128);     // R
-            data[i + 1] = this.clamp(factor * (data[i + 1] - 128) + 128); // G
-            data[i + 2] = this.clamp(factor * (data[i + 2] - 128) + 128); // B
+            data[i] = this.clamp(factor * (data[i] - 128) + 128);
+            data[i + 1] = this.clamp(factor * (data[i + 1] - 128) + 128);
+            data[i + 2] = this.clamp(factor * (data[i + 2] - 128) + 128);
         }
     }
 
@@ -192,9 +214,9 @@ class ImageEditorPlugin {
             
             const gray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
             
-            data[i] = this.clamp(gray + factor * (r - gray));     // R
-            data[i + 1] = this.clamp(gray + factor * (g - gray)); // G
-            data[i + 2] = this.clamp(gray + factor * (b - gray)); // B
+            data[i] = this.clamp(gray + factor * (r - gray));
+            data[i + 1] = this.clamp(gray + factor * (g - gray));
+            data[i + 2] = this.clamp(gray + factor * (b - gray));
         }
     }
 
@@ -205,18 +227,25 @@ class ImageEditorPlugin {
         const tint = this.settings.tint / 100;
         
         for (let i = 0; i < data.length; i += 4) {
-            // Temperature (warmer/cooler)
-            data[i] = this.clamp(data[i] * (1 + temp)); // R
-            data[i + 2] = this.clamp(data[i + 2] * (1 - temp)); // B
+            // Temperature adjustment
+            if (this.settings.temperature !== 0) {
+                data[i] = this.clamp(data[i] * (1 + temp));
+                data[i + 2] = this.clamp(data[i + 2] * (1 - temp));
+            }
             
-            // Tint (green/magenta)
-            data[i + 1] = this.clamp(data[i + 1] * (1 - tint)); // G
-            data[i] = this.clamp(data[i] * (1 + tint)); // R
+            // Tint adjustment
+            if (this.settings.tint !== 0) {
+                data[i] = this.clamp(data[i] * (1 + tint));
+                data[i + 1] = this.clamp(data[i + 1] * (1 - tint));
+            }
         }
     }
 
     applyHighlightsShadows(data) {
         if (this.settings.highlights === 0 && this.settings.shadows === 0) return;
+        
+        const highlightsFactor = 1 + (this.settings.highlights / 200);
+        const shadowsFactor = 1 + (this.settings.shadows / 200);
         
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
@@ -225,26 +254,20 @@ class ImageEditorPlugin {
             
             const brightness = (r + g + b) / 3;
             
-            // Highlights
-            if (brightness > 128 && this.settings.highlights !== 0) {
-                const factor = 1 + (this.settings.highlights / 100);
-                data[i] = this.clamp(r * factor);
-                data[i + 1] = this.clamp(g * factor);
-                data[i + 2] = this.clamp(b * factor);
-            }
-            
-            // Shadows
-            if (brightness < 128 && this.settings.shadows !== 0) {
-                const factor = 1 + (this.settings.shadows / 100);
-                data[i] = this.clamp(r * factor);
-                data[i + 1] = this.clamp(g * factor);
-                data[i + 2] = this.clamp(b * factor);
+            if (brightness > 150 && this.settings.highlights !== 0) {
+                data[i] = this.clamp(r * highlightsFactor);
+                data[i + 1] = this.clamp(g * highlightsFactor);
+                data[i + 2] = this.clamp(b * highlightsFactor);
+            } else if (brightness < 100 && this.settings.shadows !== 0) {
+                data[i] = this.clamp(r * shadowsFactor);
+                data[i + 1] = this.clamp(g * shadowsFactor);
+                data[i + 2] = this.clamp(b * shadowsFactor);
             }
         }
     }
 
     clamp(value) {
-        return Math.max(0, Math.min(255, value));
+        return Math.max(0, Math.min(255, Math.round(value)));
     }
 
     resetSettings() {
@@ -271,23 +294,47 @@ class ImageEditorPlugin {
         if (this.originalImageData) {
             this.ctx.putImageData(this.originalImageData, 0, 0);
         }
+        
+        this.showMessage('Settings reset');
     }
 
-    applyToImage() {
-        if (!this.currentImage) {
-            alert('Please select an image first');
+    async applyToImage() {
+        if (!this.selectedObject) {
+            this.showMessage('Please select an image first');
             return;
         }
 
-        // Send the adjusted settings back to Penpot
-        this.sendMessage({
-            type: 'apply-filters',
-            settings: this.settings
-        });
+        if (!this.currentImage) {
+            this.showMessage('No image loaded');
+            return;
+        }
+
+        try {
+            this.showMessage('Applying filters...');
+            
+            // Отправляем настройки в Penpot
+            await this.penpot.applyFilters({
+                ...this.settings,
+                objectId: this.selectedObject.id
+            });
+            
+            this.showMessage('Filters applied successfully!');
+            
+            // Через 2 секунды убираем сообщение
+            setTimeout(() => {
+                if (this.selectedObject) {
+                    this.showMessage('');
+                }
+            }, 2000);
+            
+        } catch (error) {
+            console.error('Error applying filters:', error);
+            this.showMessage('Error applying filters');
+        }
     }
 }
 
-// Initialize plugin when page loads
+// Инициализация плагина
 window.addEventListener('DOMContentLoaded', () => {
     new ImageEditorPlugin();
 });
