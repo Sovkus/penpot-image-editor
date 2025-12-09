@@ -1,3 +1,12 @@
+// Проверяем, есть ли module и exports, если нет, то создаем их
+if (typeof module === 'undefined') {
+  var module = { exports: {} };
+}
+
+if (typeof exports === 'undefined') {
+  var exports = module.exports;
+}
+
 module.exports = {
   create: function() {
     console.log('Image Editor plugin: creating...');
