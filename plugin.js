@@ -1,26 +1,40 @@
 // plugin.js
-console.log('🔧 IMAGE EDITOR: Loading as function...');
+console.log('⚡ IMAGE EDITOR: Immediate test');
 
-// Пробуем экспортировать функцию, которая возвращает объект
-module.exports = function() {
-    console.log('🔧 IMAGE EDITOR: Module function called!');
+// Попробуем сразу выполнить код, который должен создавать интерфейс
+(function() {
+    console.log('⚡ IIFE executing...');
     
-    return {
+    // Попробуем получить доступ к Penpot API
+    if (typeof window !== 'undefined' && window.parent) {
+        console.log('⚡ Window parent exists');
+        
+        // Отправим сообщение о готовности
+        window.parent.postMessage({
+            type: 'penpot-plugin-ready',
+            name: 'image-editor'
+        }, '*');
+    }
+    
+    // Создадим глобальный объект разными способами
+    var myPlugin = {
         create: function() {
-            console.log('🎉 IMAGE EDITOR: create() CALLED!');
-            
+            console.log('⚡ CREATE CALLED!');
             return {
-                html: '<div style="padding:20px"><h3>Image Editor</h3><p>Success!</p></div>',
+                html: '<div>TEST</div>',
                 css: '',
-                onMount: function(root) {
-                    console.log('🎉 IMAGE EDITOR: Mounted!', root);
-                },
-                onMessage: function(data) {
-                    console.log('🎉 IMAGE EDITOR: Message:', data);
-                }
+                onMount: function() { console.log('⚡ MOUNTED'); },
+                onMessage: function() {}
             };
         }
     };
-};
-
-console.log('🔧 IMAGE EDITOR: Function exported');
+    
+    // Пробуем все возможные способы
+    try { exports = myPlugin; } catch(e) {}
+    try { module.exports = myPlugin; } catch(e) {}
+    try { this.exports = myPlugin; } catch(e) {}
+    try { if (typeof window !== 'undefined') window.Plugin = myPlugin; } catch(e) {}
+    try { Plugin = myPlugin; } catch(e) {}
+    
+    console.log('⚡ All exports attempted');
+})();
