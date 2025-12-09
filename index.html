@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+console.log('HTML PLUGIN LOADED');
+if (window.parent) {
+    window.parent.postMessage({
+        type: 'penpot-html-plugin',
+        html: '<div style="padding:20px">HTML Plugin</div>',
+        css: 'div { color: red; }'
+    }, '*');
+}
+</script>
+</body>
+</html>
