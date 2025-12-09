@@ -1,10 +1,10 @@
 {
   "name": "Image Editor",
   "version": "1.0.0",
-  "description": "Image editing plugin with exposure, contrast, saturation and other adjustments",
-  "icon": "penpot-image-editor/icon.svg",
+  "description": "Image editing plugin for Penpot",
+  "icon": "icon.svg",
   "permissions": ["content:styles", "file:current"],
-  "entry": "penpot-image-editor/index.html",
+  "entry": "plugin.html",
   "type": "ui",
   "size": {
     "width": 420,
