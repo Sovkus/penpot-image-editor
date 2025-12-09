@@ -1,151 +1,422 @@
-// Проверяем, что DOM загружен
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPlugin);
-} else {
-    initPlugin();
-}
+// Создаем HTML структуру плагина
+const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-function initPlugin() {
-    console.log('Penpot Image Editor plugin initializing...');
-    
-    // Получаем элементы
-    const canvas = document.getElementById('preview-canvas');
-    const ctx = canvas.getContext('2d');
-    const previewPlaceholder = document.getElementById('preview-placeholder');
-    const infoText = document.getElementById('info-text');
-    
-    let originalImageData = null;
-    let currentSettings = {
-        exposure: 0,
-        contrast: 0,
-        saturation: 0,
-        temperature: 0,
-        tint: 0,
-        highlights: 0,
-        shadows: 0
-    };
-    
-    // Инициализация слайдеров
-    initSliders();
-    
-    // Инициализация кнопок
-    initButtons();
-    
-    // Устанавливаем связь с Penpot
-    setupPenpotConnection();
-    
-    function initSliders() {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: transparent;
+            color: var(--penpot-text-primary);
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .preview-section {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .preview-container {
+            width: 208px;
+            height: 208px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            background: var(--penpot-background-secondary);
+            border: 1px solid var(--penpot-border-primary);
+        }
+
+        #preview-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .preview-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--penpot-text-secondary);
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--penpot-text-primary);
+        }
+
+        .control-value {
+            font-feature-settings: 'tnum' 1;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--penpot-border-primary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--penpot-primary);
+            cursor: pointer;
+            border: 2px solid var(--penpot-background-primary);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--penpot-primary);
+            cursor: pointer;
+            border: 2px solid var(--penpot-background-primary);
+            border: none;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        button {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: 1px solid var(--penpot-border-primary);
+            background: var(--penpot-background-secondary);
+            color: var(--penpot-text-primary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: var(--penpot-background-tertiary);
+            border-color: var(--penpot-border-secondary);
+        }
+
+        button.primary {
+            background: var(--penpot-primary);
+            color: white;
+            border-color: var(--penpot-primary);
+        }
+
+        button.primary:hover {
+            background: var(--penpot-primary-dark);
+        }
+
+        .info-text {
+            font-size: 11px;
+            color: var(--penpot-text-secondary);
+            text-align: center;
+            margin-top: 8px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="preview-section">
+            <div class="preview-container">
+                <canvas id="preview-canvas" width="208" height="208"></canvas>
+                <div class="preview-placeholder" id="preview-placeholder">
+                    Select an image<br>in Penpot to edit
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Exposure</span>
+                        <span class="control-value" id="exposure-value">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="exposure" min="-100" max="100" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Contrast</span>
+                        <span class="control-value" id="contrast-value">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="contrast" min="-100" max="100" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Saturation</span>
+                        <span class="control-value" id="saturation-value">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="saturation" min="-100" max="100" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Temperature</span>
+                        <span class="control-value" id="temperature-value">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="temperature" min="-100" max="100" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Tint</span>
+                        <span class="control-value" id="tint-value">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="tint" min="-100" max="100" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Highlights</span>
+                        <span class="control-value" id="highlights-value">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="highlights" min="-100" max="100" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Shadows</span>
+                        <span class="control-value" id="shadows-value">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="shadows" min="-100" max="100" value="0" step="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="reset-btn">Reset All</button>
+            <button id="apply-btn" class="primary">Apply to Image</button>
+        </div>
+
+        <div class="info-text" id="info-text">
+            Adjust sliders to edit the selected image
+        </div>
+    </div>
+
+    <script>
+        // JavaScript код будет вставлен здесь
+    </script>
+</body>
+</html>
+`;
+
+// Класс плагина
+class ImageEditorPlugin {
+    constructor() {
+        this.html = html;
+        this.currentImage = null;
+        this.originalImageData = null;
+        this.canvas = null;
+        this.ctx = null;
+        this.previewPlaceholder = null;
+        this.infoText = null;
+        
+        this.settings = {
+            exposure: 0,
+            contrast: 0,
+            saturation: 0,
+            temperature: 0,
+            tint: 0,
+            highlights: 0,
+            shadows: 0
+        };
+    }
+
+    // Метод, который вызывается Penpot при создании плагина
+    create() {
+        console.log('Image Editor plugin creating...');
+        return {
+            html: this.html,
+            onMount: this.onMount.bind(this),
+            onMessage: this.onMessage.bind(this)
+        };
+    }
+
+    // Вызывается когда DOM готов
+    onMount(root) {
+        console.log('Plugin mounted', root);
+        
+        // Получаем элементы DOM
+        this.canvas = root.querySelector('#preview-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.previewPlaceholder = root.querySelector('#preview-placeholder');
+        this.infoText = root.querySelector('#info-text');
+        
+        // Инициализируем слайдеры
+        this.initSliders(root);
+        
+        // Инициализируем кнопки
+        this.initButtons(root);
+        
+        // Устанавливаем начальный статус
+        this.updateStatus('Select an image in Penpot to edit');
+        
+        // Запрашиваем текущее выделение
+        this.sendMessage({
+            type: 'get-selection'
+        });
+        
+        console.log('Plugin initialized successfully');
+    }
+
+    initSliders(root) {
         const sliders = ['exposure', 'contrast', 'saturation', 'temperature', 'tint', 'highlights', 'shadows'];
         
         sliders.forEach(sliderId => {
-            const slider = document.getElementById(sliderId);
-            const valueDisplay = document.getElementById(`${sliderId}-value`);
+            const slider = root.querySelector(`#${sliderId}`);
+            const valueDisplay = root.querySelector(`#${sliderId}-value`);
             
             if (slider && valueDisplay) {
-                // Устанавливаем начальное значение
-                valueDisplay.textContent = '0';
-                
-                // Добавляем обработчик
-                slider.addEventListener('input', function(e) {
+                slider.addEventListener('input', (e) => {
                     const value = parseInt(e.target.value);
-                    currentSettings[sliderId] = value;
+                    this.settings[sliderId] = value;
                     valueDisplay.textContent = value;
-                    
-                    // Применяем фильтры
-                    if (originalImageData) {
-                        applyFilters();
-                    }
+                    this.applyFilters();
                 });
             }
         });
     }
-    
-    function initButtons() {
-        const resetBtn = document.getElementById('reset-btn');
-        const applyBtn = document.getElementById('apply-btn');
+
+    initButtons(root) {
+        const resetBtn = root.querySelector('#reset-btn');
+        const applyBtn = root.querySelector('#apply-btn');
         
         if (resetBtn) {
-            resetBtn.addEventListener('click', resetSettings);
+            resetBtn.addEventListener('click', () => this.resetSettings());
         }
         
         if (applyBtn) {
-            applyBtn.addEventListener('click', applyToImage);
+            applyBtn.addEventListener('click', () => this.applyToImage());
         }
     }
-    
-    function setupPenpotConnection() {
-        // Слушаем сообщения от Penpot
-        window.addEventListener('message', function(event) {
-            console.log('Message from Penpot:', event.data);
-            
-            // Обрабатываем сообщения
-            if (event.data && event.data.type) {
-                handlePenpotMessage(event.data);
-            }
-        });
+
+    // Обработка сообщений от Penpot
+    onMessage(data) {
+        console.log('Message from Penpot:', data);
         
-        // Отправляем сообщение о готовности
-        setTimeout(() => {
-            sendToPenpot({
-                type: 'plugin-ready',
-                name: 'image-editor'
-            });
-            updateStatus('Plugin ready. Select an image in Penpot.');
-        }, 500);
-    }
-    
-    function sendToPenpot(message) {
-        if (window.parent) {
-            window.parent.postMessage(message, '*');
-        }
-    }
-    
-    function handlePenpotMessage(data) {
-        console.log('Processing message:', data.type);
+        if (!data || !data.type) return;
         
         switch(data.type) {
-            case 'selection-changed':
-                handleSelection(data.objects);
+            case 'selection':
+                this.handleSelection(data.objects);
                 break;
-            case 'image-loaded':
-                loadImage(data.url);
+            case 'image-data':
+                this.handleImageData(data);
                 break;
-            case 'filters-applied':
-                updateStatus('Filters applied successfully!');
+            case 'success':
+                this.updateStatus(data.message || 'Operation successful');
+                break;
+            case 'error':
+                this.updateStatus('Error: ' + (data.message || 'Unknown error'));
                 break;
         }
     }
-    
-    function handleSelection(objects) {
+
+    handleSelection(objects) {
         if (!objects || objects.length === 0) {
-            clearPreview();
-            updateStatus('No image selected');
+            this.clearPreview();
+            this.updateStatus('No image selected');
             return;
         }
         
         const firstObject = objects[0];
         
         if (firstObject.type === 'image' && firstObject.id) {
-            updateStatus('Loading image...');
+            this.updateStatus('Loading image...');
             
-            // Запрашиваем изображение
-            sendToPenpot({
-                type: 'request-image',
+            // Запрашиваем данные изображения
+            this.sendMessage({
+                type: 'get-image-data',
                 id: firstObject.id
             });
         } else {
-            updateStatus('Please select an image');
-            clearPreview();
+            this.updateStatus('Please select an image');
+            this.clearPreview();
         }
     }
-    
-    function loadImage(imageUrl) {
+
+    handleImageData(data) {
+        if (!data || !data.url) {
+            this.updateStatus('Failed to load image');
+            return;
+        }
+        
+        this.loadImage(data.url);
+    }
+
+    loadImage(imageUrl) {
         const img = new Image();
         
-        img.onload = function() {
-            // Настраиваем размеры canvas
-            canvas.width = 208;
-            canvas.height = 208;
+        img.onload = () => {
+            // Настраиваем canvas
+            this.canvas.width = 208;
+            this.canvas.height = 208;
             
             // Рассчитываем размеры с сохранением пропорций
             const scale = Math.min(
@@ -159,167 +430,151 @@ function initPlugin() {
             const y = (208 - height) / 2;
             
             // Очищаем и рисуем
-            ctx.clearRect(0, 0, 208, 208);
-            ctx.drawImage(img, x, y, width, height);
+            this.ctx.clearRect(0, 0, 208, 208);
+            this.ctx.drawImage(img, x, y, width, height);
             
             // Сохраняем оригинальные данные
-            originalImageData = ctx.getImageData(0, 0, 208, 208);
+            this.originalImageData = this.ctx.getImageData(0, 0, 208, 208);
             
             // Показываем canvas
-            canvas.style.display = 'block';
-            previewPlaceholder.style.display = 'none';
+            this.canvas.style.display = 'block';
+            this.previewPlaceholder.style.display = 'none';
             
-            updateStatus('Image loaded. Adjust settings.');
+            this.updateStatus('Image loaded. Adjust settings.');
             
             // Сбрасываем настройки
-            resetSettings();
+            this.resetSettings();
         };
         
-        img.onerror = function() {
-            updateStatus('Error loading image');
-            clearPreview();
+        img.onerror = () => {
+            this.updateStatus('Error loading image');
+            this.clearPreview();
         };
         
+        // Разрешаем CORS если нужно
         img.crossOrigin = 'anonymous';
         img.src = imageUrl;
     }
-    
-    function clearPreview() {
-        canvas.style.display = 'none';
-        previewPlaceholder.style.display = 'flex';
-        originalImageData = null;
+
+    clearPreview() {
+        if (this.canvas) {
+            this.canvas.style.display = 'none';
+        }
+        if (this.previewPlaceholder) {
+            this.previewPlaceholder.style.display = 'flex';
+        }
+        this.originalImageData = null;
     }
-    
-    function applyFilters() {
-        if (!originalImageData) return;
+
+    applyFilters() {
+        if (!this.originalImageData) return;
         
         // Восстанавливаем оригинал
-        ctx.putImageData(originalImageData, 0, 0);
+        this.ctx.putImageData(this.originalImageData, 0, 0);
         
         // Получаем данные для обработки
-        const imageData = ctx.getImageData(0, 0, 208, 208);
+        const imageData = this.ctx.getImageData(0, 0, 208, 208);
         const data = imageData.data;
         
-        // Применяем все фильтры
-        applyFilter(data, 'exposure');
-        applyFilter(data, 'contrast');
-        applyFilter(data, 'saturation');
-        applyFilter(data, 'temperature');
-        applyFilter(data, 'tint');
-        applyFilter(data, 'highlights');
-        applyFilter(data, 'shadows');
+        // Применяем фильтры
+        this.applyExposure(data);
+        this.applyContrast(data);
+        this.applySaturation(data);
+        this.applyTemperatureTint(data);
+        this.applyHighlightsShadows(data);
         
         // Возвращаем обработанные данные
-        ctx.putImageData(imageData, 0, 0);
+        this.ctx.putImageData(imageData, 0, 0);
     }
-    
-    function applyFilter(data, filterName) {
-        const value = currentSettings[filterName];
-        if (value === 0) return;
+
+    applyExposure(data) {
+        if (this.settings.exposure === 0) return;
         
-        switch(filterName) {
-            case 'exposure':
-                applyExposure(data, value);
-                break;
-            case 'contrast':
-                applyContrast(data, value);
-                break;
-            case 'saturation':
-                applySaturation(data, value);
-                break;
-            case 'temperature':
-                applyTemperature(data, value);
-                break;
-            case 'tint':
-                applyTint(data, value);
-                break;
-            case 'highlights':
-                applyHighlights(data, value);
-                break;
-            case 'shadows':
-                applyShadows(data, value);
-                break;
-        }
-    }
-    
-    function applyExposure(data, value) {
-        const factor = 1 + (value / 100);
+        const factor = 1 + (this.settings.exposure / 100);
+        
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = clamp(data[i] * factor);
-            data[i + 1] = clamp(data[i + 1] * factor);
-            data[i + 2] = clamp(data[i + 2] * factor);
+            data[i] = this.clamp(data[i] * factor);
+            data[i + 1] = this.clamp(data[i + 1] * factor);
+            data[i + 2] = this.clamp(data[i + 2] * factor);
         }
     }
-    
-    function applyContrast(data, value) {
-        const factor = (259 * (value + 255)) / (255 * (259 - value));
+
+    applyContrast(data) {
+        if (this.settings.contrast === 0) return;
+        
+        const factor = (259 * (this.settings.contrast + 255)) / (255 * (259 - this.settings.contrast));
+        
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = clamp(factor * (data[i] - 128) + 128);
-            data[i + 1] = clamp(factor * (data[i + 1] - 128) + 128);
-            data[i + 2] = clamp(factor * (data[i + 2] - 128) + 128);
+            data[i] = this.clamp(factor * (data[i] - 128) + 128);
+            data[i + 1] = this.clamp(factor * (data[i + 1] - 128) + 128);
+            data[i + 2] = this.clamp(factor * (data[i + 2] - 128) + 128);
         }
     }
-    
-    function applySaturation(data, value) {
-        const factor = 1 + (value / 100);
+
+    applySaturation(data) {
+        if (this.settings.saturation === 0) return;
+        
+        const factor = 1 + (this.settings.saturation / 100);
+        
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
+            
             const gray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
             
-            data[i] = clamp(gray + factor * (r - gray));
-            data[i + 1] = clamp(gray + factor * (g - gray));
-            data[i + 2] = clamp(gray + factor * (b - gray));
+            data[i] = this.clamp(gray + factor * (r - gray));
+            data[i + 1] = this.clamp(gray + factor * (g - gray));
+            data[i + 2] = this.clamp(gray + factor * (b - gray));
         }
     }
-    
-    function applyTemperature(data, value) {
-        const factor = value / 100;
+
+    applyTemperatureTint(data) {
+        if (this.settings.temperature === 0 && this.settings.tint === 0) return;
+        
+        const temp = this.settings.temperature / 100;
+        const tint = this.settings.tint / 100;
+        
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = clamp(data[i] * (1 + factor));
-            data[i + 2] = clamp(data[i + 2] * (1 - factor));
-        }
-    }
-    
-    function applyTint(data, value) {
-        const factor = value / 100;
-        for (let i = 0; i < data.length; i += 4) {
-            data[i] = clamp(data[i] * (1 + factor));
-            data[i + 1] = clamp(data[i + 1] * (1 - factor));
-        }
-    }
-    
-    function applyHighlights(data, value) {
-        const factor = 1 + (value / 200);
-        for (let i = 0; i < data.length; i += 4) {
-            const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-            if (brightness > 150) {
-                data[i] = clamp(data[i] * factor);
-                data[i + 1] = clamp(data[i + 1] * factor);
-                data[i + 2] = clamp(data[i + 2] * factor);
+            if (this.settings.temperature !== 0) {
+                data[i] = this.clamp(data[i] * (1 + temp));
+                data[i + 2] = this.clamp(data[i + 2] * (1 - temp));
+            }
+            
+            if (this.settings.tint !== 0) {
+                data[i] = this.clamp(data[i] * (1 + tint));
+                data[i + 1] = this.clamp(data[i + 1] * (1 - tint));
             }
         }
     }
-    
-    function applyShadows(data, value) {
-        const factor = 1 + (value / 200);
+
+    applyHighlightsShadows(data) {
+        if (this.settings.highlights === 0 && this.settings.shadows === 0) return;
+        
+        const highlightsFactor = 1 + (this.settings.highlights / 200);
+        const shadowsFactor = 1 + (this.settings.shadows / 200);
+        
         for (let i = 0; i < data.length; i += 4) {
             const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-            if (brightness < 100) {
-                data[i] = clamp(data[i] * factor);
-                data[i + 1] = clamp(data[i + 1] * factor);
-                data[i + 2] = clamp(data[i + 2] * factor);
+            
+            if (brightness > 150 && this.settings.highlights !== 0) {
+                data[i] = this.clamp(data[i] * highlightsFactor);
+                data[i + 1] = this.clamp(data[i + 1] * highlightsFactor);
+                data[i + 2] = this.clamp(data[i + 2] * highlightsFactor);
+            } else if (brightness < 100 && this.settings.shadows !== 0) {
+                data[i] = this.clamp(data[i] * shadowsFactor);
+                data[i + 1] = this.clamp(data[i + 1] * shadowsFactor);
+                data[i + 2] = this.clamp(data[i + 2] * shadowsFactor);
             }
         }
     }
-    
-    function clamp(value) {
+
+    clamp(value) {
         return Math.max(0, Math.min(255, value));
     }
-    
-    function resetSettings() {
-        currentSettings = {
+
+    resetSettings() {
+        this.settings = {
             exposure: 0,
             contrast: 0,
             saturation: 0,
@@ -328,42 +583,64 @@ function initPlugin() {
             highlights: 0,
             shadows: 0
         };
-        
+
         // Сбрасываем слайдеры
-        Object.keys(currentSettings).forEach(key => {
-            const slider = document.getElementById(key);
-            const valueDisplay = document.getElementById(`${key}-value`);
-            
-            if (slider) slider.value = 0;
-            if (valueDisplay) valueDisplay.textContent = '0';
-        });
+        const sliders = ['exposure', 'contrast', 'saturation', 'temperature', 'tint', 'highlights', 'shadows'];
         
-        // Восстанавливаем изображение
-        if (originalImageData) {
-            ctx.putImageData(originalImageData, 0, 0);
+        sliders.forEach(sliderId => {
+            const slider = document.getElementById(sliderId);
+            const valueDisplay = document.getElementById(`${sliderId}-value`);
+            
+            if (slider) {
+                slider.value = 0;
+                // Триггерим событие input для обновления
+                slider.dispatchEvent(new Event('input'));
+            }
+            if (valueDisplay) {
+                valueDisplay.textContent = '0';
+            }
+        });
+
+        // Восстанавливаем оригинальное изображение
+        if (this.originalImageData) {
+            this.ctx.putImageData(this.originalImageData, 0, 0);
         }
         
-        updateStatus('Settings reset');
+        this.updateStatus('Settings reset');
     }
-    
-    function applyToImage() {
-        if (!originalImageData) {
-            updateStatus('No image to apply');
+
+    applyToImage() {
+        if (!this.originalImageData) {
+            this.updateStatus('No image loaded');
             return;
         }
+
+        this.updateStatus('Applying filters...');
         
-        updateStatus('Applying filters...');
-        
-        sendToPenpot({
+        // Отправляем настройки в Penpot
+        this.sendMessage({
             type: 'apply-filters',
-            settings: currentSettings
+            settings: this.settings
         });
     }
-    
-    function updateStatus(message) {
-        console.log('Status:', message);
-        if (infoText) {
-            infoText.textContent = message;
+
+    sendMessage(message) {
+        if (window.parent && window.parent.penpot) {
+            window.parent.penpot.ui.sendMessage(message);
         }
     }
+
+    updateStatus(message) {
+        console.log('Status:', message);
+        if (this.infoText) {
+            this.infoText.textContent = message;
+        }
+    }
+}
+
+// Экспортируем плагин для Penpot
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ImageEditorPlugin;
+} else if (typeof window !== 'undefined') {
+    window.Plugin = ImageEditorPlugin;
 }
